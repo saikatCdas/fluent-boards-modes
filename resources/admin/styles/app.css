@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for modes menu */
+.fbm-modes-menu-container {
+    width: 100%;
+}
+
+/* Override fluent-boards overflow hidden for main menu items */
+.fframe_main-menu-items {
+    overflow: visible !important;
+}
+
+/* MilkDown Toolbar Styles */
+milkdown-toolbar {
+    position: absolute;
+    display: flex;
+    background: #ffffff;
+    box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+milkdown-toolbar[data-show="false"] {
+    display: none !important;
+}
+
+milkdown-toolbar .divider {
+    width: 1px;
+    background: rgba(0, 0, 0, 0.1);
+    height: 24px;
+    margin: 10px;
+}
+
+milkdown-toolbar .toolbar-item {
+    width: 32px;
+    height: 32px;
+    margin: 6px;
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+milkdown-toolbar .toolbar-item:hover {
+    background: #f0f0f0;
+}
+
+milkdown-toolbar .toolbar-item:active {
+    background: #e0e0e0;
+}
+
+milkdown-toolbar .toolbar-item svg {
+    height: 24px;
+    width: 24px;
+    color: #374151;
+    fill: #374151;
+}
+
+milkdown-toolbar .toolbar-item.active svg {
+    color: #2563eb;
+    fill: #2563eb;
+}
+
+/* Link input container in toolbar - inline with buttons */
+milkdown-toolbar .link-input-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 4px;
+    margin: 0;
+}
+
+milkdown-toolbar .link-input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+    min-width: 200px;
+    height: 32px;
+    margin: 6px 0;
+}
+
+milkdown-toolbar .link-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+milkdown-toolbar .toolbar-item.confirm-link {
+    margin: 0;
+}
+
+milkdown-toolbar .toolbar-item.confirm-link:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+milkdown-toolbar .toolbar-item.confirm-link:disabled svg {
+    color: #9ca3af;
+    fill: #9ca3af;
+}
+
+/* Hide link tooltip visual components completely (we only need the API for toolbar) */
+milkdown-link-preview,
+milkdown-link-edit,
+milkdown-link-tooltip {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Placeholder styling for MilkDown editor */
+.crepe-placeholder::before {
+    position: absolute;
+    color: rgba(107, 114, 128, 0.6); /* gray-500 with 60% opacity */
+    pointer-events: none;
+    height: 0;
+    content: attr(data-placeholder);
+    font-size: 14px;
+}
+

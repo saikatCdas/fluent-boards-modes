@@ -5,13 +5,19 @@ namespace FluentBoardsModes\App\Vite;
 class Vite
 {
     protected static $moduleScripts = [];
-    protected static $resourceURL = 'http://localhost:5173/resources/';
+    protected static $resourceURL = 'http://localhost:5173/';
     protected static $assetsURL = FLUENT_BOARDS_MODES_URL . 'assets/';
     protected static $lastJsHandle = null;
 
     private static function isDev()
     {
-        return defined('WP_DEBUG') && WP_DEBUG && file_exists(FLUENT_BOARDS_MODES_PATH . 'assets/manifest.json') === false;
+        // If manifest exists, use production mode
+        if (file_exists(FLUENT_BOARDS_MODES_PATH . 'assets/manifest.json')) {
+            return false;
+        }
+        
+        // In development mode when manifest doesn't exist, assume dev server is running
+        return defined('WP_DEBUG') && WP_DEBUG;
     }
 
     public static function enqueueScript($handle, $src, $dependency = [], $version = false, $inFooter = false)
@@ -62,7 +68,8 @@ class Vite
     private static function generateSrc($src)
     {
         if (static::isDev()) {
-            return static::$resourceURL . $src;
+            // In dev mode, prepend 'resources/' to match Vite input path
+            return static::$resourceURL . 'resources/' . $src;
         }
 
         $manifest = static::parseManifest();
@@ -83,7 +90,7 @@ class Vite
                         'fluent-boards-modes-' . md5($cssFile),
                         static::$assetsURL . $cssFile,
                         [],
-                        $version ?? FLUENT_BOARDS_MODES_VERSION
+                        FLUENT_BOARDS_MODES_VERSION
                     );
                 }
             }

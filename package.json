@@ -1,0 +1,30 @@
+{
+  "name": "fluent-boards-modes",
+  "version": "1.0.0",
+  "description": "A menu system for Fluent Boards modes",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@milkdown/crepe": "^7.5.3",
+    "@milkdown/kit": "^7.5.3",
+    "@milkdown/plugin-tooltip": "^7.5.3",
+    "@milkdown/theme-nord": "^7.5.0",
+    "@milkdown/vue": "^7.5.0",
+    "@prosemirror-adapter/vue": "^0.2.6",
+    "atomico": "^1.79.2",
+    "dayjs": "^1.11.10",
+    "element-plus": "^2.13.0",
+    "prosemirror-state": "^1.4.3",
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.0",
+    "autoprefixer": "^10.4.16",
+    "tailwindcss": "^3.3.6",
+    "vite": "^5.0.0"
+  }
+}
