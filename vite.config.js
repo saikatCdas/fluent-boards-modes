@@ -1,12 +1,17 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import tailwindcss from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 const inputs = {
     'resources/admin/bootstrap/app.js': 'resources/admin/bootstrap/app.js',
+    'resources/admin/js/notes-drawer-mount.js': 'resources/admin/js/notes-drawer-mount.js',
 }
+
 
 export default defineConfig({
     plugins: [vue()],
@@ -21,7 +26,7 @@ export default defineConfig({
     },
 
     build: {
-        manifest: true,
+        manifest: 'manifest.json',
         outDir: 'assets',
         assetsDir: '.',
         emptyOutDir: true,
@@ -29,7 +34,15 @@ export default defineConfig({
             input: inputs,
             output: {
                 chunkFileNames: '[name].js',
-                entryFileNames: '[name].js',
+                entryFileNames: (chunkInfo) => {
+                    // Custom output path for notes-drawer-mount.js
+                    const facadeModuleId = chunkInfo.facadeModuleId || '';
+                    if (facadeModuleId.includes('notes-drawer-mount')) {
+                        return 'js/notes-drawer-mount.js';
+                    }
+                    // Default for other entries - preserve relative path structure
+                    return '[name].js';
+                },
                 assetFileNames: (assetInfo) => {
                     if (assetInfo.name === 'app.css') return 'app.css';
                     return '[name].[ext]';

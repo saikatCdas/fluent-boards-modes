@@ -47,38 +47,38 @@ import { TextSelection } from 'prosemirror-state'
 import Rest from '@/Bits/Rest.js'
 
 const props = defineProps({
-    modelValue: {
-        type: String,
-        default: ''
-    },
-    placeholder: {
-        type: String,
-        default: ''
-    },
-    autofocus: {
-        type: Boolean,
-        default: false
-    },
-    mentionQuery: {
-        type: Object,
-        default: () => ({})
-    },
-    autofocus_changed: {
-        type: Boolean,
-        default: false
-    },
-    disable_mention: {
-        type: Boolean,
-        default: false
-    },
-    disable_media: {
-        type: Boolean,
-        default: false
-    },
-    defaultMentions: {
-        type: Array,
-        default: () => []
-    }
+        modelValue: {
+            type: String,
+            default: ''
+        },
+        placeholder: {
+            type: String,
+            default: ''
+        },
+        autofocus: {
+            type: Boolean,
+            default: false
+        },
+        mentionQuery: {
+            type: Object,
+            default: () => ({})
+        },
+        autofocus_changed: {
+            type: Boolean,
+            default: false
+        },
+        disable_mention: {
+            type: Boolean,
+            default: false
+        },
+        disable_media: {
+            type: Boolean,
+            default: false
+        },
+        defaultMentions: {
+            type: Array,
+            default: () => []
+        }
 })
 
 const emit = defineEmits(['update:modelValue', 'handleMediaUpload', 'editorCreated'])
@@ -94,9 +94,9 @@ const justReplaced = ref(false)
 const searchingMention = ref(false)
 
 watch(() => props.autofocus_changed, (value) => {
-    if (value) {
+            if (value) {
         focusOnEditor()
-    }
+            }
 })
 
 watch(() => props.modelValue, (newValue) => {
@@ -118,8 +118,8 @@ const updateContent = (emoji) => {
         const transaction = state.tr.insertText(insertText, from)
         const newCursorPosition = from + insertText.length
 
-        const newTransaction = transaction.setSelection(
-            TextSelection.create(transaction.doc, newCursorPosition)
+                const newTransaction = transaction.setSelection(
+                    TextSelection.create(transaction.doc, newCursorPosition)
         )
 
         view.dispatch(newTransaction)
@@ -130,40 +130,40 @@ const updateContent = (emoji) => {
 const initEditor = () => {
     if (!crepe_editor_vue.value) return
     
-    const crepe = new Crepe({
+            const crepe = new Crepe({
         root: crepe_editor_vue.value,
         defaultValue: props.modelValue,
         features: {
             [CrepeFeature.BlockEdit]: false, // Disable block edit (slash menu) - only keep toolbar popover
             [CrepeFeature.LinkTooltip]: false // Disable link tooltip - we use toolbar for links
         },
-        featureConfigs: {
+                featureConfigs: {
             [CrepeFeature.Placeholder]: {
                 text: props.placeholder || 'Type your message here!',
-                mode: 'doc'
-            }
-        },
-        onUpdate(markdown) {
+                        mode: 'doc'
+                    }
+                },
+                onUpdate(markdown) {
             emit('update:modelValue', markdown)
             currentContent.value = markdown
-        },
-        async handleCommonActions(actionName, ctx) {
-            if (actionName === 'editor_updated') {
+                },
+                async handleCommonActions(actionName, ctx) {
+                    if (actionName === 'editor_updated') {
                 if (props.disable_mention) {
                     return false
-                }
+                        }
                 checkforMention(ctx)
             } else if (actionName === 'handleFileUpload') {
                 if (props.disable_media) {
                     return []
-                }
+                        }
                 return await handleFileUpload(ctx)
-            }
-        }
+                    }
+                }
     })
     
-    crepe.create()
-        .then(() => {
+            crepe.create()
+                .then(() => {
             focusOnEditor()
             emit('editorCreated')
             editor.value = crepe.getEditor()
@@ -173,7 +173,7 @@ const initEditor = () => {
 const focusOnEditor = () => {
     if (!props.autofocus) {
         return
-    }
+            }
 
     const el = crepe_editor_vue.value
     if (el && el.querySelector('.ProseMirror')) {
@@ -187,70 +187,70 @@ const focusOnEditor = () => {
             r.setEnd(e, 1)
             s.removeAllRanges()
             s.addRange(r)
-        }
-    }
+                }
+            }
 }
 
 const checkforMention = (ctx) => {
     let message = currentContent.value
 
-    // check if the message has any @ symbol
+            // check if the message has any @ symbol
     if (!message.includes('@') || justReplaced.value) {
         showMentionPop.value = false
         currentMentionSearch.value = ''
         return
-    }
+            }
 
     const view = ctx.get(editorViewCtx)
     const {state} = view
     const {selection} = state
-    if (!selection) {
+            if (!selection) {
         return
-    }
-    // get the last word starts with @ symbol in the current block
+            }
+            // get the last word starts with @ symbol in the current block
     const currentBlockText = state.doc.textBetween(0, selection.to, ' ')
 
     const lastMetion = currentBlockText.match(/@([\w-_]+)$/)
-    if (!lastMetion) {
+            if (!lastMetion) {
         showMentionPop.value = false
         currentMentionSearch.value = ''
         return
-    }
+            }
 
     let mention = lastMetion[1]
 
-    if (!mention || mention.length < 3) {
+            if (!mention || mention.length < 3) {
         if (props.defaultMentions && props.defaultMentions.length) {
             let mentionLower = mention.toLowerCase()
             let filteredMention = props.defaultMentions.filter((item) => {
                 return item.username.toLowerCase().includes(mentionLower) || item.display_name.toLowerCase().includes(mentionLower)
             })
 
-            if (filteredMention.length) {
+                    if (filteredMention.length) {
                 currentMentionSearch.value = mention
                 mentionResults.value = filteredMention
                 showMentionPop.value = true
-            }
-        }
+                    }
+                }
         return
-    }
+            }
 
     if (currentMentionSearch.value) {
         currentMentionSearch.value = mention
         if (searchingMention.value) {
             return false
-        }
-    }
+                }
+            }
 
     searchingMention.value = true
     currentMentionSearch.value = mention
     
     Rest.get('members', {mention: currentMentionSearch.value, ...props.mentionQuery})
-        .then(response => {
+                .then(response => {
             mentionResults.value = response.members.data
             showMentionPop.value = true
-        })
-        .finally(() => {
+                })
+                .finally(() => {
             searchingMention.value = false
         })
 }
@@ -258,7 +258,7 @@ const checkforMention = (ctx) => {
 const addMention = (mention) => {
     if (props.disable_mention) {
         return
-    }
+            }
 
     currentContent.value = currentContent.value.replace('@' + currentMentionSearch.value, mention + '&nbsp;')
     if (editor.value) {
@@ -268,29 +268,29 @@ const addMention = (mention) => {
     showMentionPop.value = false
     currentMentionSearch.value = ''
     justReplaced.value = true
-    setTimeout(() => {
+            setTimeout(() => {
         justReplaced.value = false
     }, 2000)
 }
 
 const handleFileUpload = async (config) => {
     const files = config.files
-    for (let i = 0; i < files.length; i++) {
+            for (let i = 0; i < files.length; i++) {
         const file = files.item(i)
-        if (!file) {
+                if (!file) {
             continue
-        }
+                }
 
-        // You can handle whatever the file type you want, we handle image here.
-        if (!file.type.includes('image')) {
+                // You can handle whatever the file type you want, we handle image here.
+                if (!file.type.includes('image')) {
             continue
-        }
+                }
 
         emit('handleMediaUpload', file)
-    }
+            }
 
     return []
-}
+        }
 
 onMounted(() => {
     setTimeout(() => {
@@ -301,7 +301,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
     if (editor.value) {
         editor.value.destroy()
-    }
+        }
 })
 </script>
 

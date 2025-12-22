@@ -1,7 +1,16 @@
 const request = function (method, route, data = {}) {
-    const url = `${window.fluentAddonVars.rest.url}/${route}`;
+    // Use fluentBoardsModes API URL if available, otherwise fallback to fluentAddonVars
+    const apiUrl = (window.fluentBoardsModes && window.fluentBoardsModes.apiUrl) 
+        ? window.fluentBoardsModes.apiUrl 
+        : (window.fluentAddonVars ? window.fluentAddonVars.rest.url : '/wp-json/fluent-boards-modes/v1/');
+    
+    const url = `${apiUrl}${route}`;
 
-    const headers = {'X-WP-Nonce': window.fluentAddonVars.rest.nonce};
+    const nonce = (window.fluentBoardsModes && window.fluentBoardsModes.nonce)
+        ? window.fluentBoardsModes.nonce
+        : (window.fluentAddonVars ? window.fluentAddonVars.rest.nonce : '');
+    
+    const headers = {'X-WP-Nonce': nonce};
 
     if (['PUT', 'PATCH', 'DELETE'].indexOf(method.toUpperCase()) !== -1) {
         headers['X-HTTP-Method-Override'] = method;
@@ -43,8 +52,17 @@ export default {
         return request('PATCH', route, data);
     },
     uploadFile(route, data = {}) {
-        const url = `${window.fluentAddonVars.rest.url}/${route}`;
-        const headers = {'X-WP-Nonce': window.fluentAddonVars.rest.nonce};
+        const apiUrl = (window.fluentBoardsModes && window.fluentBoardsModes.apiUrl) 
+            ? window.fluentBoardsModes.apiUrl 
+            : (window.fluentAddonVars ? window.fluentAddonVars.rest.url : '/wp-json/fluent-boards-modes/v1/');
+        
+        const url = `${apiUrl}${route}`;
+        
+        const nonce = (window.fluentBoardsModes && window.fluentBoardsModes.nonce)
+            ? window.fluentBoardsModes.nonce
+            : (window.fluentAddonVars ? window.fluentAddonVars.rest.nonce : '');
+        
+        const headers = {'X-WP-Nonce': nonce};
 
         return new Promise((resolve, reject) => {
             window.jQuery.ajax({

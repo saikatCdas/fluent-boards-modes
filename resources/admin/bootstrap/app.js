@@ -5,6 +5,61 @@ import routes from '../routes.js'
 import '../styles/app.css'
 import 'element-plus/dist/index.css'
 import { ElPopover } from 'element-plus'
+import ElementPlus from 'element-plus'
+import NotesDrawer from '../components/NotesDrawer.vue'
+import NotesDrawerMount from '../components/NotesDrawerMount.vue'
+
+// Expose Vue, ElementPlus, and NotesDrawer globally for use in board menu modals
+if (typeof window !== 'undefined') {
+    window.Vue = { createApp }
+    window.ElementPlus = ElementPlus
+    window.NotesDrawerComponent = NotesDrawer
+    window.NotesDrawerMountComponent = NotesDrawerMount
+    
+    // Try to register component on fluent-boards app if it's already available
+    function registerOnFluentBoardsApp() {
+        const flApp = document.querySelector('.fl_app')
+        if (flApp && flApp.__vue_app__) {
+            const flAppInstance = flApp.__vue_app__._instance?.appContext?.app
+            if (flAppInstance) {
+                flAppInstance.component('NotesDrawer', NotesDrawer)
+                console.log('NotesDrawer registered on fluent-boards app (early registration)')
+                return true
+            }
+        }
+        return false
+    }
+    
+    // Try immediately
+    if (document.readyState !== 'loading') {
+        registerOnFluentBoardsApp()
+    }
+    
+    // Also try when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', registerOnFluentBoardsApp)
+    }
+    
+    // Listen for fluent-boards app ready event
+    document.addEventListener('fluentComPortalAppReady', () => {
+        setTimeout(registerOnFluentBoardsApp, 100)
+    })
+    
+    // Watch for .fl_app to appear
+    if (document.body) {
+        const observer = new MutationObserver(() => {
+            if (registerOnFluentBoardsApp()) {
+                observer.disconnect()
+            }
+        })
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        })
+        // Disconnect after 5 seconds
+        setTimeout(() => observer.disconnect(), 5000)
+    }
+}
 
 let isMounted = false
 let mountAttempts = 0
@@ -68,6 +123,23 @@ function initModesMenu() {
             const app = createApp(App)
             app.use(router)
             app.component('ElPopover', ElPopover)
+            
+            // Register NotesDrawer component globally so it can be used in board menu modals
+            app.component('NotesDrawer', NotesDrawer)
+            
+            // Also make it available on the fluent-boards app if it exists
+            const flApp = document.querySelector('.fl_app')
+            if (flApp && flApp.__vue_app__) {
+                const flAppInstance = flApp.__vue_app__._instance?.appContext?.app
+                if (flAppInstance) {
+                    flAppInstance.component('NotesDrawer', NotesDrawer)
+                    console.log('NotesDrawer registered on fluent-boards app')
+                }
+            }
+            
+            // Ensure component is available immediately
+            console.log('NotesDrawer component exposed globally:', typeof window.NotesDrawerComponent !== 'undefined')
+            
             app.mount('#fbm-modes-menu')
             isMounted = true
             console.log('Fluent Boards Modes app mounted successfully')

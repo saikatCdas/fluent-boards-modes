@@ -5,7 +5,12 @@ defined('ABSPATH') or die;
 // Load Vite class
 require_once FLUENT_BOARDS_MODES_PATH . 'app/Vite/Vite.php';
 
+// Load REST API routes
+require_once FLUENT_BOARDS_MODES_PATH . 'app/Http/Routes/Api.php';
+require_once FLUENT_BOARDS_MODES_PATH . 'app/Http/Controllers/ApiController.php';
+
 use FluentBoardsModes\App\Vite\Vite;
+use FluentBoardsModes\App\Http\Routes\Api;
 
 class FluentBoardsModes
 {
@@ -30,6 +35,12 @@ class FluentBoardsModes
         
         // Also hook into fluent-boards loading app event
         add_action('fluent-boards_loading_app', [$this, 'enqueueAssets']);
+        
+        // Register REST API routes
+        add_action('rest_api_init', [Api::class, 'register']);
+        
+        // Add Notes menu item to board menu
+        add_filter('fluent_boards/board_menu_items', [$this, 'addNotesMenuItem'], 10, 2);
     }
 
     public function addModesSubmenu($permissions, $isAdmin)
@@ -54,14 +65,14 @@ class FluentBoardsModes
         );
 
         // Add Focus Modes submenu
-        add_submenu_page(
-            'fluent-boards',
-            __('Focus Modes', 'fluent-boards-modes'),
-            __('Focus Modes', 'fluent-boards-modes'),
-            $capability,
-            'fluent-boards#/modes/focus-modes',
-            [$this, 'renderModesPage']
-        );
+        // add_submenu_page(
+        //     'fluent-boards',
+        //     __('Focus Modes', 'fluent-boards-modes'),
+        //     __('Focus Modes', 'fluent-boards-modes'),
+        //     $capability,
+        //     'fluent-boards#/modes/focus-modes',
+        //     [$this, 'renderModesPage']
+        // );
     }
 
     public function renderModesPage()
@@ -93,6 +104,11 @@ class FluentBoardsModes
                     'key'       => 'focus-modes',
                     'label'     => __('Focus Modes', 'fluent-boards-modes'),
                     'permalink' => $baseUrl . 'modes/focus-modes'
+                ],
+                [
+                    'key'       => 'para',
+                    'label'     => __('Para', 'fluent-boards-modes'),
+                    'permalink' => $baseUrl . 'modes/para'
                 ]
             ]
         ];
@@ -121,6 +137,26 @@ class FluentBoardsModes
             FLUENT_BOARDS_MODES_VERSION,
             true
         );
+        
+        // Enqueue notes drawer mount script (built by Vite)
+        Vite::enqueueScript(
+            'fluent-boards-modes-notes-mount',
+            'admin/js/notes-drawer-mount.js',
+            ['fluent-boards_admin_app', 'fluent-boards-modes-app'],
+            FLUENT_BOARDS_MODES_VERSION,
+            true
+        );
+        
+        // Explicitly enqueue NotesDrawerMount CSS if it exists
+        $notesDrawerCssPath = FLUENT_BOARDS_MODES_PATH . 'assets/NotesDrawerMount.css';
+        if (file_exists($notesDrawerCssPath)) {
+            wp_enqueue_style(
+                'fluent-boards-modes-notes-drawer',
+                FLUENT_BOARDS_MODES_URL . 'assets/NotesDrawerMount.css',
+                ['fluent-boards_admin_app'],
+                FLUENT_BOARDS_MODES_VERSION
+            );
+        }
 
         // Add inline CSS override with high specificity
         add_action('admin_head', [$this, 'addInlineStyles'], 999);
@@ -164,6 +200,118 @@ class FluentBoardsModes
             }
         </style>
         <?php
+    }
+    
+    /**
+     * Add Notes menu item to board menu
+     */
+    public function addNotesMenuItem($menuItems, $board_id = null)
+    {
+        // Generate unique container ID
+        $containerId = 'fbm-notes-modal-' . ($board_id ?: 'default');
+        
+        // Get the board ID from the filter parameter or try to get it from the request
+        if (!$board_id) {
+            // Try to get board ID from URL or request
+            if (isset($_REQUEST['board_id'])) {
+                $board_id = intval($_REQUEST['board_id']);
+            } elseif (isset($_REQUEST['project_id'])) {
+                $board_id = intval($_REQUEST['project_id']);
+            }
+        }
+        
+        // Create HTML with container - Vue component will be mounted by the mount script
+        // Use {{BOARD_ID}} placeholder that fluent-boards will replace, or fallback to data attribute
+        $html = sprintf(
+            '<div id="%s" data-board-id="{{BOARD_ID}}" class="fbm-notes-container"></div>
+            <script type="text/javascript">
+            (function() {
+                var containerId = "%s";
+                
+                // Function to get board ID from various sources
+                function getBoardId() {
+                    // Try to get from container data attribute first
+                    var container = document.getElementById(containerId);
+                    if (container) {
+                        var boardId = container.getAttribute("data-board-id");
+                        if (boardId && boardId !== "{{BOARD_ID}}" && boardId !== "") {
+                            return boardId;
+                        }
+                    }
+                    
+                    // Try to get from fluent-boards global vars
+                    if (typeof window.fluentAddonVars !== "undefined" && window.fluentAddonVars.board_id) {
+                        return window.fluentAddonVars.board_id;
+                    }
+                    
+                    // Try to get from URL hash (e.g., #/boards/123)
+                    var hashMatch = window.location.hash.match(/\/boards?\/(\d+)/);
+                    if (hashMatch && hashMatch[1]) {
+                        return hashMatch[1];
+                    }
+                    
+                    // Try to get from URL path
+                    var pathMatch = window.location.pathname.match(/\/board\/(\d+)/);
+                    if (pathMatch && pathMatch[1]) {
+                        return pathMatch[1];
+                    }
+                    
+                    return null;
+                }
+                
+                // Function to mount the component
+                function mountNotesComponent() {
+                    if (typeof window.mountNotesDrawer === "function") {
+                        var boardId = getBoardId();
+                        if (boardId) {
+                            console.log("Mounting NotesDrawer for board:", boardId);
+                            window.mountNotesDrawer(containerId, boardId);
+                        } else {
+                            console.warn("Board ID not found, retrying...");
+                            setTimeout(mountNotesComponent, 200);
+                        }
+                    } else {
+                        console.warn("mountNotesDrawer function not available, retrying...");
+                        // Retry after a short delay if mount function is not available yet
+                        setTimeout(mountNotesComponent, 200);
+                    }
+                }
+                
+                // Also try to mount when modal opens (in case it\'s opened before script loads)
+                setTimeout(function() {
+                    var container = document.getElementById(containerId);
+                    if (container && !container.__vue_app__ && !container.querySelector(".fbm-notes-drawer")) {
+                        mountNotesComponent();
+                    }
+                }, 500);
+                
+                // Wait for DOM to be ready
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", function() {
+                        setTimeout(mountNotesComponent, 100);
+                    });
+                } else {
+                    setTimeout(mountNotesComponent, 100);
+                }
+            })();
+            </script>',
+            esc_attr($containerId),
+            esc_js($containerId)
+        );
+        
+        // Add Notes menu item
+        $menuItems['notes'] = [
+            'key'       => 'notes',
+            'label'     => __('Notes', 'fluent-boards-modes'),
+            'type'      => 'custom',
+            'position'  => 5, // Position after board labels
+            'icon'      => '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4.414A2 2 0 0 0 3 11.586l-2 2V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12.793a.5.5 0 0 0 .854.353l2.853-2.853A1 1 0 0 1 4.414 12H14a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/><path d="M5 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>',
+            'html'      => $html,
+            'width'     => '800px',
+            'render_in' => 'modal' // Render in modal instead of drawer
+        ];
+        
+        return $menuItems;
     }
 }
 

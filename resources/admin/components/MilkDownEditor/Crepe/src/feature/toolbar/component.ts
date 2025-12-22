@@ -110,49 +110,49 @@ export const toolbarComponent: Component<ToolbarProps> = ({
 
   return html`<host data-show=${show}>
     ${!showLinkInput ? html`
-      <button
-        class=${clsx('toolbar-item', ctx && isActive(strongSchema.type(ctx)) && 'active')}
-        onmousedown=${onClick((ctx) => {
-          const commands = ctx.get(commandsCtx)
-          commands.call(toggleStrongCommand.key)
-        })}
-      >
-        ${config?.boldIcon?.() ?? boldIcon}
-      </button>
-      <button
-        class=${clsx('toolbar-item', ctx && isActive(emphasisSchema.type(ctx)) && 'active')}
-        onmousedown=${onClick((ctx) => {
-          const commands = ctx.get(commandsCtx)
-          commands.call(toggleEmphasisCommand.key)
-        })}
-      >
-        ${config?.italicIcon?.() ?? italicIcon}
-      </button>
-      <button
-        class=${clsx('toolbar-item', ctx && isActive(strikethroughSchema.type(ctx)) && 'active')}
-        onmousedown=${onClick((ctx) => {
-          const commands = ctx.get(commandsCtx)
-          commands.call(toggleStrikethroughCommand.key)
-        })}
-      >
-        ${config?.strikethroughIcon?.() ?? strikethroughIcon}
-      </button>
-      <div class="divider"></div>
-      <button
-        class=${clsx('toolbar-item', ctx && isActive(inlineCodeSchema.type(ctx)) && 'active')}
-        onmousedown=${onClick((ctx) => {
-          const commands = ctx.get(commandsCtx)
-          commands.call(toggleInlineCodeCommand.key)
-        })}
-      >
-        ${config?.codeIcon?.() ?? codeIcon}
-      </button>
-      <button
-        class=${clsx('toolbar-item', ctx && isActive(linkSchema.type(ctx)) && 'active')}
+    <button
+      class=${clsx('toolbar-item', ctx && isActive(strongSchema.type(ctx)) && 'active')}
+      onmousedown=${onClick((ctx) => {
+        const commands = ctx.get(commandsCtx)
+        commands.call(toggleStrongCommand.key)
+      })}
+    >
+      ${config?.boldIcon?.() ?? boldIcon}
+    </button>
+    <button
+      class=${clsx('toolbar-item', ctx && isActive(emphasisSchema.type(ctx)) && 'active')}
+      onmousedown=${onClick((ctx) => {
+        const commands = ctx.get(commandsCtx)
+        commands.call(toggleEmphasisCommand.key)
+      })}
+    >
+      ${config?.italicIcon?.() ?? italicIcon}
+    </button>
+    <button
+      class=${clsx('toolbar-item', ctx && isActive(strikethroughSchema.type(ctx)) && 'active')}
+      onmousedown=${onClick((ctx) => {
+        const commands = ctx.get(commandsCtx)
+        commands.call(toggleStrikethroughCommand.key)
+      })}
+    >
+      ${config?.strikethroughIcon?.() ?? strikethroughIcon}
+    </button>
+    <div class="divider"></div>
+    <button
+      class=${clsx('toolbar-item', ctx && isActive(inlineCodeSchema.type(ctx)) && 'active')}
+      onmousedown=${onClick((ctx) => {
+        const commands = ctx.get(commandsCtx)
+        commands.call(toggleInlineCodeCommand.key)
+      })}
+    >
+      ${config?.codeIcon?.() ?? codeIcon}
+    </button>
+    <button
+      class=${clsx('toolbar-item', ctx && isActive(linkSchema.type(ctx)) && 'active')}
         onmousedown=${handleLinkClick}
-      >
-        ${config?.linkIcon?.() ?? linkIcon}
-      </button>
+    >
+      ${config?.linkIcon?.() ?? linkIcon}
+    </button>
     ` : html`
       <div class="link-input-container">
         <input

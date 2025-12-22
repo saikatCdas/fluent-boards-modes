@@ -68,7 +68,7 @@ class ToolbarView implements PluginView {
         if (hasTextSelection && selection instanceof TextSelection) {
           // Show toolbar if text is selected, regardless of focus state
           // This handles Command+A and other keyboard selections
-          return true
+        return true
         }
 
         return false

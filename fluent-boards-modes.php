@@ -4,7 +4,7 @@ defined('ABSPATH') or die;
 
 /*
 Plugin Name: Fluent Boards Modes
-Description: A menu system for Fluent Boards modes including Focus Modes
+Description: Productivity modes for Fluent Boards including Focus Mode with Pomodoro timer, task management, and notes, plus Para Mode dashboard
 Version: 1.0.0
 Author: Your Name
 Author URI: 

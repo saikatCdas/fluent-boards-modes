@@ -11,13 +11,29 @@ class Vite
 
     private static function isDev()
     {
+        // Check for explicit dev mode constant (highest priority)
+        if (defined('FLUENT_BOARDS_MODES_DEV') && FLUENT_BOARDS_MODES_DEV) {
+            return true;
+        }
+        
+        // Check if manifest exists - if it does, use production mode
+        $manifestPath = FLUENT_BOARDS_MODES_PATH . 'assets/.vite/manifest.json';
+        if (!file_exists($manifestPath)) {
+            $manifestPath = FLUENT_BOARDS_MODES_PATH . 'assets/manifest.json';
+        }
+        
         // If manifest exists, use production mode
-        if (file_exists(FLUENT_BOARDS_MODES_PATH . 'assets/manifest.json')) {
+        if (file_exists($manifestPath)) {
             return false;
         }
         
-        // In development mode when manifest doesn't exist, assume dev server is running
-        return defined('WP_DEBUG') && WP_DEBUG;
+        // If no manifest and WP_DEBUG is true, assume dev mode
+        // This allows dev mode when manifest is deleted/not built
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            return true;
+        }
+        
+        return false;
     }
 
     public static function enqueueScript($handle, $src, $dependency = [], $version = false, $inFooter = false)
@@ -43,7 +59,11 @@ class Vite
             return $manifest;
         }
 
-        $manifestPath = FLUENT_BOARDS_MODES_PATH . 'assets/manifest.json';
+        // Check both possible manifest locations
+        $manifestPath = FLUENT_BOARDS_MODES_PATH . 'assets/.vite/manifest.json';
+        if (!file_exists($manifestPath)) {
+            $manifestPath = FLUENT_BOARDS_MODES_PATH . 'assets/manifest.json';
+        }
         
         if (!file_exists($manifestPath)) {
             return null;
@@ -92,6 +112,22 @@ class Vite
                         [],
                         FLUENT_BOARDS_MODES_VERSION
                     );
+                }
+            }
+            
+            // Also check for CSS in imported chunks (for notes-drawer-mount.js)
+            if (isset($file['imports']) && is_array($file['imports'])) {
+                foreach ($file['imports'] as $importKey) {
+                    if (isset($manifest[$importKey]) && isset($manifest[$importKey]['css'])) {
+                        foreach ($manifest[$importKey]['css'] as $cssFile) {
+                            wp_enqueue_style(
+                                'fluent-boards-modes-' . md5($cssFile),
+                                static::$assetsURL . $cssFile,
+                                [],
+                                FLUENT_BOARDS_MODES_VERSION
+                            );
+                        }
+                    }
                 }
             }
             
